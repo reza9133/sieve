@@ -276,39 +276,30 @@ class GenLayerChain(Chain):
             )
 
     @staticmethod
-    def _execution_outcome(receipt: Any) -> str:
-        """FINISHED_WITH_RETURN / FINISHED_WITH_ERROR, searched anywhere in the receipt.
+    def _get(node: Any, key: str) -> Any:
+        return node.get(key) if isinstance(node, dict) else getattr(node, key, None)
 
-        The consensus vote (for example MAJORITY_AGREE) says nothing about whether the call
-        reverted, so it must never be mistaken for the execution result.
+    @classmethod
+    def _execution_outcome(cls, receipt: Any) -> tuple[str, str]:
+        """(FINISHED_WITH_RETURN | FINISHED_WITH_ERROR | "", raw evidence).
+
+        Only the final leader receipt and the top-level execution result are consulted.
+        Validator receipts and nested history can contain errors that consensus overruled,
+        and the consensus vote (for example MAJORITY_AGREE) never says whether a call reverted.
         """
-        found: list[str] = []
-
-        def walk(node: Any, depth: int = 0) -> None:
-            if depth > 8:
-                return
-            if isinstance(node, dict):
-                for key, value in node.items():
-                    lowered = str(key).lower()
-                    if isinstance(value, str):
-                        text = str(getattr(value, "name", value)).upper()
-                        if "FINISHED_WITH_RETURN" in text or "FINISHED_WITH_ERROR" in text:
-                            found.append(text)
-                        elif lowered in ("execution_result", "executionresult"):
-                            found.append("FINISHED_WITH_ERROR" if text == "ERROR"
-                                         else "FINISHED_WITH_RETURN" if text == "SUCCESS" else "")
-                    walk(value, depth + 1)
-            elif isinstance(node, (list, tuple)):
-                for item in node:
-                    walk(item, depth + 1)
-            elif hasattr(node, "__dict__"):
-                walk(vars(node), depth + 1)
-
-        walk(receipt)
-        found = [item for item in found if item]
-        if not found:
-            return ""
-        return "FINISHED_WITH_ERROR" if any("ERROR" in item for item in found) else found[0]
+        leader_text = ""
+        consensus = cls._get(receipt, "consensus_data")
+        leaders = cls._get(consensus, "leader_receipt") if consensus is not None else None
+        if isinstance(leaders, (list, tuple)) and leaders:
+            leader_text = str(cls._get(leaders[0], "execution_result") or "").upper()
+        top = cls._get(receipt, "tx_execution_result_name")
+        top_text = str(getattr(top, "name", top) or "").upper()
+        evidence = f"leader={leader_text or '-'}, top={top_text or '-'}"
+        if leader_text in ("SUCCESS", "ERROR"):
+            return ("FINISHED_WITH_RETURN" if leader_text == "SUCCESS" else "FINISHED_WITH_ERROR"), evidence
+        if top_text in ("FINISHED_WITH_RETURN", "FINISHED_WITH_ERROR"):
+            return top_text, evidence
+        return "", evidence
 
     def _dump_receipt(self, tx_hash: str, receipt: Any) -> None:
         try:
@@ -354,9 +345,9 @@ class GenLayerChain(Chain):
             receipt = self._wait(record.tx_hash)
             self._dump_receipt(record.tx_hash, receipt)
             record.status = self._field(receipt, "status_name", "statusName", "status")
-            record.result = self._execution_outcome(receipt)
+            record.result, evidence = self._execution_outcome(receipt)
             vote = self._field(receipt, "result_name", "resultName")
-            record.note = f"consensus={vote or '?'}" + ("" if record.result else "; execution result not found in receipt")
+            record.note = f"consensus={vote or '?'}; {evidence}"
         except Exception as error:  # noqa: BLE001
             record.note = f"{type(error).__name__}: {error}"
             if expect == "success":
@@ -566,8 +557,22 @@ class Scenario:
         for name, wei in self.funding_needs().items():
             log(f"  {name:8s} {self.chain.address(name)}  needs {wei / GEN:.5f} GEN")
 
+    def baseline(self) -> dict:
+        """Contract-wide accounting before this run touched anything (other runs share it)."""
+        if "baseline" not in self.state:
+            accounting = self.view("get_accounting")
+            self.state["baseline"] = {k: int(accounting[k]) for k in
+                                      ("total_credits", "total_locked_budgets", "total_locked_bonds",
+                                       "accounted_liabilities")}
+            self.save()
+        return self.state["baseline"]
+
+    def delta(self, accounting: dict, key: str) -> int:
+        return int(accounting[key]) - int(self.state.get("baseline", {}).get(key, 0))
+
     def phase_funding(self) -> None:
         section = "1. Funding"
+        self.baseline()
         self.print_funding_plan()
         needs = self.funding_needs()
         for name, wei in needs.items():
@@ -633,9 +638,9 @@ class Scenario:
         sealed = self.bid("bravo")
         self.report.check(section, "price stays hidden while sealed", sealed["price"] == 0, 0,
                           sealed["price"])
-        self.report.check(section, "bonds locked",
-                          self.view("get_accounting")["total_locked_bonds"] == 6 * BOND,
-                          6 * BOND, self.view("get_accounting")["total_locked_bonds"])
+        locked_bonds = self.delta(self.view("get_accounting"), "total_locked_bonds")
+        self.report.check(section, "bonds locked (change since run start)",
+                          locked_bonds == 6 * BOND, 6 * BOND, locked_bonds)
         # Adversarial checks that must be rejected on-chain.
         self.revert_check(section, "funder cannot bid on own tender", "funder", "commit_bid",
                           [self.funder, self.tender_id, self.commitment_for("alpha")])
@@ -758,10 +763,12 @@ class Scenario:
             self.report.check(section, f"{name} credit", got == wei, wei, got)
         accounting = self.view("get_accounting")
         total = sum(expected_credit.values())
-        self.report.check(section, "ledger conserves all deposited value",
-                          accounting["total_credits"] == total and accounting["total_locked_budgets"] == 0
-                          and accounting["total_locked_bonds"] == 0, total,
-                          accounting["total_credits"])
+        credits_delta = self.delta(accounting, "total_credits")
+        locked_delta = (self.delta(accounting, "total_locked_budgets")
+                        + self.delta(accounting, "total_locked_bonds"))
+        self.report.check(section, "ledger conserves all deposited value (change since run start)",
+                          credits_delta == total and locked_delta == 0, f"credits +{total}, locked +0",
+                          f"credits +{credits_delta}, locked +{locked_delta}")
         self.report.check(section, "contract balance covers every liability",
                           accounting["solvent"], True, accounting["solvent"])
         self.state["expected_credit"] = expected_credit
@@ -792,8 +799,9 @@ class Scenario:
         for name in ("echo", "foxtrot"):
             self.revert_check(section, f"{name} has nothing to withdraw", name, "withdraw_credit", [])
         accounting = self.view("get_accounting")
-        self.report.check(section, "no liabilities remain", accounting["accounted_liabilities"] == 0, 0,
-                          accounting["accounted_liabilities"])
+        liabilities_delta = self.delta(accounting, "accounted_liabilities")
+        self.report.check(section, "no liabilities remain from this run (change since run start)",
+                          liabilities_delta == 0, 0, liabilities_delta)
         self.report.sections[section] = {"accounting": accounting}
 
     def run(self) -> None:
