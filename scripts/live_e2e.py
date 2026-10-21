@@ -3,7 +3,7 @@
 
 Run it from a GitHub Codespace (or any machine with internet access):
 
-    python scripts/live_e2e.py --address 0xYourDeployedSieve
+    python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1
 
 It drives one complete tender through the real network with real validators and a real
 LLM: sealed commitments, reveals, validator screening of five bids (one compliant and

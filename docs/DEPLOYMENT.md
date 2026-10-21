@@ -26,8 +26,8 @@ python scripts/live_e2e.py --deploy        # optional: deploys through the runne
 The runner uses throwaway accounts, one funder and six bidders, and prints the accounts it needs funded before it proceeds.
 
 ```bash
-python scripts/live_e2e.py --address 0xYourSieve --check-only   # tooling and fixture check
-python scripts/live_e2e.py --address 0xYourSieve                # full run, about 40 minutes
+python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1 --check-only   # tooling and fixture check
+python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1                # full run, about 40 minutes
 ```
 
 Useful flags: `--fixture-base-url` (where `fixtures/live/` is publicly served, for example the raw GitHub URL of a public repository), `--commit-seconds`, `--reveal-seconds`, `--wait-seconds`, `--rpc-url`, `--resume`. State is kept in `.live/`, so an interrupted run resumes with `--resume`.
@@ -49,7 +49,7 @@ Reports are written to `reports/live-e2e-<timestamp>.md` and `.json`. Expected o
 | Field | Value |
 | --- | --- |
 | Version | 0.1.0 |
-| Address | _not yet deployed_ |
+| Address | `0xCDb477B28fA35CcBf96129270af88305c8d2C8e1` |
 | Deploy transaction | |
-| Source SHA-256 | |
+| Source SHA-256 | `f7fad4c45626ed74dff33bc5256905acbdb1b5c9ec414b415dafe3371986a036` |
 | Live report | |

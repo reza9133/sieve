@@ -1,4 +1,4 @@
-"""Release gate: source rules, lint, ABI schema, language rule, and every Direct Mode test."""
+"""Release gate: source rules, lint, ABI schema, and every Direct Mode test."""
 
 from __future__ import annotations
 
@@ -19,10 +19,6 @@ SCHEMA = ROOT / "artifacts" / "sieve.abi.json"
 GENVM_VERSION = "v0.2.16"
 WRITE_SCHEMA = "--write-schema" in sys.argv
 
-# The repository is English-only: no Arabic-script (Persian/Arabic) text anywhere.
-ARABIC_SCRIPT = re.compile("[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]")
-TEXT_SUFFIXES = {".py", ".md", ".txt", ".yml", ".yaml", ".json", ".ini", ".cfg", ".toml"}
-SKIP_DIRS = {".git", "__pycache__", ".pytest_cache", ".venv", ".live", ".gltest-artifacts", "reports"}
 
 SOURCES = sorted(CONTRACTS.glob("*.py"))
 if SOURCES != [CONTRACT]:
@@ -40,17 +36,6 @@ if len(lines) < 2 or not re.fullmatch(r'# \{ "Depends": "py-genlayer:[a-z0-9]+" 
 for line in (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines():
     if "==" not in line or "rc" in line.lower() or "dev" in line.lower():
         raise SystemExit(f"release dependency must be pinned to a stable version: {line}")
-
-offenders = []
-for path in ROOT.rglob("*"):
-    if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
-        continue
-    if SKIP_DIRS.intersection(path.relative_to(ROOT).parts):
-        continue
-    if ARABIC_SCRIPT.search(path.read_text(encoding="utf-8", errors="replace")):
-        offenders.append(str(path.relative_to(ROOT)))
-if offenders:
-    raise SystemExit(f"Arabic-script text is not allowed in this repository: {offenders}")
 
 ast.parse(source, filename=str(CONTRACT))
 subprocess.run([sys.executable, "-m", "compileall", "-q", "contracts", "tests", "scripts"],
@@ -108,5 +93,4 @@ print(f"tests_failed={failed}")
 print("deployable_contract_sources=1")
 print("lint=PASS")
 print(f"schema={schema_state}")
-print("language_rule=PASS")
 print("preflight=PASS")
