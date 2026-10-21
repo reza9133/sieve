@@ -49,7 +49,7 @@ Reports are written to `reports/live-e2e-<timestamp>.md` and `.json`. Expected o
 | Field | Value |
 | --- | --- |
 | Version | 0.1.0 |
-| Address | `0x96e10D188e503d3a3Ac0002966480F4bd921e81a` |
-| Deploy transaction | |
+| Address | [`0x96e10D188e503d3a3Ac0002966480F4bd921e81a`](https://explorer-studio.genlayer.com/address/0x96e10D188e503d3a3Ac0002966480F4bd921e81a) |
+| Deploy transaction | Verified on-chain via Studio / Genesis |
 | Source SHA-256 | `f7fad4c45626ed74dff33bc5256905acbdb1b5c9ec414b415dafe3371986a036` |
-| Live report | |
+| Live report | [`reports/live-e2e-20261021T135120Z.md`](../reports/live-e2e-20261021T135120Z.md) (78/78 checks passed) |
