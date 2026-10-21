@@ -213,10 +213,18 @@ class GenLayerChain(Chain):
         self._throttle()
         body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
         request = urllib.request.Request(
-            self.rpc_url, data=body, headers={"content-type": "application/json"}
+            self.rpc_url, data=body,
+            headers={"content-type": "application/json", "accept": "application/json",
+                     "user-agent": "sieve-live-e2e/0.1 (+python-urllib)"},
         )
-        with urllib.request.urlopen(request, timeout=60) as response:
-            payload = json.loads(response.read().decode())
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                payload = json.loads(response.read().decode())
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode(errors="replace")[:300]
+            raise ChainError(f"{method}: HTTP {error.code} from {self.rpc_url}: {detail}") from error
+        except (urllib.error.URLError, TimeoutError, ValueError) as error:
+            raise ChainError(f"{method}: cannot reach {self.rpc_url}: {error}") from error
         if "error" in payload:
             raise ChainError(f"{method}: {payload['error']}")
         return payload.get("result")
@@ -874,7 +882,7 @@ def main(argv: list[str] | None = None, chain_factory: Callable | None = None) -
             md_path, json_path = write_report(report, REPORT_DIR, contract or "(none)", base_url)
             log(f"report written: {os.path.relpath(md_path)} and {json_path.name}")
         if report.fatal:
-            log("ABORTED: " + report.fatal.splitlines()[0])
+            log("ABORTED: " + report.fatal.strip().splitlines()[-1])
         passed = sum(1 for c in report.checks if c.passed)
         log(f"{passed}/{len(report.checks)} checks passed")
     return exit_code
