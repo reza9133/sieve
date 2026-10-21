@@ -26,8 +26,8 @@ python scripts/live_e2e.py --deploy        # optional: deploys through the runne
 The runner uses throwaway accounts, one funder and six bidders, and prints the accounts it needs funded before it proceeds.
 
 ```bash
-python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1 --check-only   # tooling and fixture check
-python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1                # full run, about 60 minutes
+python scripts/live_e2e.py --address 0x96e10D188e503d3a3Ac0002966480F4bd921e81a --check-only   # tooling and fixture check
+python scripts/live_e2e.py --address 0x96e10D188e503d3a3Ac0002966480F4bd921e81a                # full run, about 60 minutes
 ```
 
 Useful flags: `--fixture-base-url` (where `fixtures/live/` is publicly served, for example the raw GitHub URL of a public repository), `--commit-seconds`, `--reveal-seconds`, `--wait-seconds`, `--rpc-url`, `--resume`. State is kept in `.live/`, so an interrupted run resumes with `--resume`, but only while its commit and reveal windows are still open; after a long interruption start a fresh run (the funded test accounts are reused). Defaults are `--commit-seconds 1200` and `--reveal-seconds 720` because every Studionet transaction takes roughly 40 seconds to finalize.
@@ -49,7 +49,7 @@ Reports are written to `reports/live-e2e-<timestamp>.md` and `.json`. Expected o
 | Field | Value |
 | --- | --- |
 | Version | 0.1.0 |
-| Address | `0xCDb477B28fA35CcBf96129270af88305c8d2C8e1` |
+| Address | `0x96e10D188e503d3a3Ac0002966480F4bd921e81a` |
 | Deploy transaction | |
 | Source SHA-256 | `f7fad4c45626ed74dff33bc5256905acbdb1b5c9ec414b415dafe3371986a036` |
 | Live report | |
