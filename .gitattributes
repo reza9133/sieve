@@ -1,0 +1,4 @@
+# Fixtures are hash-bound: git must never rewrite their line endings.
+fixtures/live/* -text
+*.txt text eol=lf
+contracts/sieve.py text eol=lf
