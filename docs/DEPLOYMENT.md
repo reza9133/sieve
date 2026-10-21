@@ -27,10 +27,10 @@ The runner uses throwaway accounts, one funder and six bidders, and prints the a
 
 ```bash
 python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1 --check-only   # tooling and fixture check
-python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1                # full run, about 40 minutes
+python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1                # full run, about 60 minutes
 ```
 
-Useful flags: `--fixture-base-url` (where `fixtures/live/` is publicly served, for example the raw GitHub URL of a public repository), `--commit-seconds`, `--reveal-seconds`, `--wait-seconds`, `--rpc-url`, `--resume`. State is kept in `.live/`, so an interrupted run resumes with `--resume`.
+Useful flags: `--fixture-base-url` (where `fixtures/live/` is publicly served, for example the raw GitHub URL of a public repository), `--commit-seconds`, `--reveal-seconds`, `--wait-seconds`, `--rpc-url`, `--resume`. State is kept in `.live/`, so an interrupted run resumes with `--resume`, but only while its commit and reveal windows are still open; after a long interruption start a fresh run (the funded test accounts are reused). Defaults are `--commit-seconds 1200` and `--reveal-seconds 720` because every Studionet transaction takes roughly 40 seconds to finalize.
 
 The fixtures must be reachable over public HTTPS with byte-exact content; `.gitattributes` disables line-ending conversion for them.
 

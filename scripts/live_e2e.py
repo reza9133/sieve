@@ -276,6 +276,55 @@ class GenLayerChain(Chain):
             )
 
     @staticmethod
+    def _execution_outcome(receipt: Any) -> str:
+        """FINISHED_WITH_RETURN / FINISHED_WITH_ERROR, searched anywhere in the receipt.
+
+        The consensus vote (for example MAJORITY_AGREE) says nothing about whether the call
+        reverted, so it must never be mistaken for the execution result.
+        """
+        found: list[str] = []
+
+        def walk(node: Any, depth: int = 0) -> None:
+            if depth > 8:
+                return
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    lowered = str(key).lower()
+                    if isinstance(value, str):
+                        text = str(getattr(value, "name", value)).upper()
+                        if "FINISHED_WITH_RETURN" in text or "FINISHED_WITH_ERROR" in text:
+                            found.append(text)
+                        elif lowered in ("execution_result", "executionresult"):
+                            found.append("FINISHED_WITH_ERROR" if text == "ERROR"
+                                         else "FINISHED_WITH_RETURN" if text == "SUCCESS" else "")
+                    walk(value, depth + 1)
+            elif isinstance(node, (list, tuple)):
+                for item in node:
+                    walk(item, depth + 1)
+            elif hasattr(node, "__dict__"):
+                walk(vars(node), depth + 1)
+
+        walk(receipt)
+        found = [item for item in found if item]
+        if not found:
+            return ""
+        return "FINISHED_WITH_ERROR" if any("ERROR" in item for item in found) else found[0]
+
+    def _dump_receipt(self, tx_hash: str, receipt: Any) -> None:
+        try:
+            folder = STATE_DIR / "receipts"
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder / f"{tx_hash}.json").write_text(json.dumps(receipt, indent=2, default=str)[:60000])
+        except Exception:  # noqa: BLE001
+            pass
+
+    @staticmethod
+    def _transient(error: Exception) -> bool:
+        text = str(error)
+        return any(marker in text for marker in ("502", "503", "504", "Bad gateway", "invalid JSON",
+                                                 "timed out", "Connection"))
+
+    @staticmethod
     def _field(receipt: Any, *names: str) -> str:
         for name in names:
             value = receipt.get(name) if isinstance(receipt, dict) else getattr(receipt, name, None)
@@ -287,19 +336,27 @@ class GenLayerChain(Chain):
               label: str = "", expect: str = "success") -> TxRecord:
         record = TxRecord(label or function, self.address(name), function, expected=expect)
         started = time.monotonic()
-        self._throttle()
         try:
-            tx_hash = self.client.write_contract(
-                address=self.contract, function_name=function, account=self.accounts[name],
-                args=args, value=value,
-            )
+            tx_hash = ""
+            for attempt in range(4):
+                self._throttle()
+                try:
+                    tx_hash = self.client.write_contract(
+                        address=self.contract, function_name=function, account=self.accounts[name],
+                        args=args, value=value,
+                    )
+                    break
+                except Exception as error:  # noqa: BLE001
+                    if attempt == 3 or not self._transient(error):
+                        raise
+                    time.sleep(5 * (attempt + 1))
             record.tx_hash = str(tx_hash)
             receipt = self._wait(record.tx_hash)
+            self._dump_receipt(record.tx_hash, receipt)
             record.status = self._field(receipt, "status_name", "statusName", "status")
-            record.result = self._field(
-                receipt, "tx_execution_result_name", "txExecutionResultName",
-                "result_name", "resultName",
-            )
+            record.result = self._execution_outcome(receipt)
+            vote = self._field(receipt, "result_name", "resultName")
+            record.note = f"consensus={vote or '?'}" + ("" if record.result else "; execution result not found in receipt")
         except Exception as error:  # noqa: BLE001
             record.note = f"{type(error).__name__}: {error}"
             if expect == "success":
@@ -308,8 +365,15 @@ class GenLayerChain(Chain):
         return record
 
     def read(self, function: str, args: list) -> Any:
-        self._throttle()
-        return self.client.read_contract(address=self.contract, function_name=function, args=args)
+        for attempt in range(4):
+            self._throttle()
+            try:
+                return self.client.read_contract(address=self.contract, function_name=function,
+                                                 args=args)
+            except Exception as error:  # noqa: BLE001
+                if attempt == 3 or not self._transient(error):
+                    raise
+                time.sleep(5 * (attempt + 1))
 
     # ---- deployment (best effort convenience)
     def deploy(self, code: str) -> str:
@@ -439,13 +503,13 @@ class Scenario:
         self.report.txs.append(record)
         outcome = record.succeeded
         if expect == "success":
-            log(f"tx {record.label}: {record.result or record.note or 'no result'} "
+            log(f"tx {record.label}: {record.result or 'UNKNOWN'} [{record.note}] "
                 f"({record.seconds}s)")
             if outcome is False or record.result == "SUBMISSION_ERROR":
                 self.report.check(section or "transactions", f"{record.label} executed", False,
                                   "FINISHED_WITH_RETURN", record.result or record.note)
         else:
-            log(f"tx {record.label}: expected revert, saw {record.result or record.note}")
+            log(f"tx {record.label}: expected revert, saw {record.result or 'UNKNOWN'} [{record.note}]")
         return record
 
     def view(self, function: str, args: list | None = None):
@@ -473,10 +537,22 @@ class Scenario:
         record = self.tx(who, function, args, value=value, label=name, expect="revert",
                          section=section)
         after = json.dumps(self.view("get_accounting"), sort_keys=True)
-        self.report.check(section, f"{name}: rejected", record.succeeded is not True,
-                          "FINISHED_WITH_ERROR", record.result or record.note or "no result")
+        rejected = record.succeeded is False or record.result == "SUBMISSION_ERROR"
+        self.report.check(section, f"{name}: rejected", rejected,
+                          "FINISHED_WITH_ERROR (or refused at submission)",
+                          record.result or f"UNKNOWN ({record.note})")
         self.report.check(section, f"{name}: books unchanged", before == after, "unchanged",
                           "unchanged" if before == after else "CHANGED")
+
+    def require_time_before(self, key: str, margin: int, doing: str) -> None:
+        """Stop with a clear message instead of racing a deadline that is about to pass."""
+        deadline = int(self.state.get(key, 0))
+        if deadline and self.chain.now() > deadline - margin:
+            raise ChainError(
+                f"The {key} deadline of this tender is too close or already past while {doing}. "
+                "Do not --resume an old run: start a fresh one (omit --resume) and consider "
+                "raising --commit-seconds / --reveal-seconds."
+            )
 
     # ---- phases
     def funding_needs(self) -> dict:
@@ -543,8 +619,10 @@ class Scenario:
         if self.state.get("committed"):
             return
         for name in BIDDERS:
+            self.require_time_before("commit_by", 90, "committing bids")
             self.tx(name, "deposit_credit", [], value=BOND, label=f"{name} deposits bond",
                     section=section)
+            self.require_time_before("commit_by", 45, "committing bids")
             self.tx(name, "commit_bid", [self.funder, self.tender_id, self.commitment_for(name)],
                     label=f"{name} commits sealed bid", section=section)
         self.state["committed"] = True
@@ -586,6 +664,7 @@ class Scenario:
                            self.fixtures["bravo"]["url"], self.fixtures["bravo"]["hash"],
                            self.salts["bravo"]])
         for name in REVEALERS:
+            self.require_time_before("reveal_by", 45, "revealing bids")
             promised = self.fixtures["foxtrot_promised" if name == "foxtrot" else name]
             self.tx(name, "reveal_bid", [
                 self.funder, self.tender_id, PRICES[name], self.fixtures[name]["url"],
@@ -824,8 +903,8 @@ def main(argv: list[str] | None = None, chain_factory: Callable | None = None) -
     parser.add_argument("--deploy", action="store_true", help="deploy contracts/sieve.py first")
     parser.add_argument("--fixture-base-url", default=os.environ.get("FIXTURE_BASE_URL"))
     parser.add_argument("--skip-fixture-check", action="store_true")
-    parser.add_argument("--commit-seconds", type=int, default=600)
-    parser.add_argument("--reveal-seconds", type=int, default=480)
+    parser.add_argument("--commit-seconds", type=int, default=1200)
+    parser.add_argument("--reveal-seconds", type=int, default=720)
     parser.add_argument("--wait-seconds", type=int, default=900, help="per-transaction wait budget")
     parser.add_argument("--rpc-url", default=os.environ.get("GENLAYER_RPC_URL"))
     parser.add_argument("--resume", help="run id from a previous (interrupted) run")
@@ -840,7 +919,9 @@ def main(argv: list[str] | None = None, chain_factory: Callable | None = None) -
     exit_code = 1
     try:
         state, state_path = load_state(STATE_DIR / "accounts.json", args.resume)
-        base_url = fixture_base_url(args.fixture_base_url)
+        base_url = args.fixture_base_url and fixture_base_url(args.fixture_base_url) \
+            or state.get("fixture_base_url") or fixture_base_url(None)
+        state["fixture_base_url"] = base_url
         fixtures = load_fixtures(base_url, verify=not args.skip_fixture_check)
         log(f"fixtures verified at {base_url}")
         if not contract and not args.deploy and not chain_factory:
