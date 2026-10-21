@@ -5,7 +5,7 @@ import json
 import pytest
 
 from tests.direct.support import (
-    BOND, BUDGET, COMMIT_BY, NOW_TS, PROMPT_HEAD, REQ_URL, REQUIREMENTS, REVEAL_BY, REVIEW_BY,
+    BOND, BUDGET, COMMIT_BY, NOW, NOW_TS, PROMPT_HEAD, REQ_URL, REQUIREMENTS, REVEAL_BY, REVIEW_BY,
     TENDER_ID, Spec, addr, analysis, at, bid_of, check_books, commit, credit, deploy, deposit,
     digest, finalize, open_tender, reveal, run_to_screening, screen, serve, tender_of,
 )
@@ -211,18 +211,19 @@ def test_requirement_count_in_the_prompt_follows_the_tender(direct_vm, direct_de
     screen(contract, direct_vm, actors[0], spec)
     assert bid_of(contract, actors[0], spec)["status"] == "compliant"
     # A three-item answer to a five-requirement tender is malformed, not compliant.
-    contract2 = deploy(direct_vm, direct_deploy)
+    # Same contract, a second tender from another funder (one contract per module load).
     short = Spec("short", actors[2], PRICE, verdict=analysis(("met",) * 3))
-    open_tender(contract2, direct_vm, actors[3], count=5)
+    direct_vm.warp(NOW)
+    open_tender(contract, direct_vm, actors[3], count=5)
     direct_vm.warp(at(NOW_TS + 60))
-    commit(contract2, direct_vm, actors[3], short)
+    commit(contract, direct_vm, actors[3], short)
     direct_vm.warp(at(COMMIT_BY))
-    reveal(contract2, direct_vm, actors[3], short)
+    reveal(contract, direct_vm, actors[3], short)
     serve(direct_vm, [short])
     direct_vm.warp(at(REVEAL_BY))
-    screen(contract2, direct_vm, actors[3], short)
-    assert bid_of(contract2, actors[3], short)["status"] == "revealed"
-    assert bid_of(contract2, actors[3], short)["attempts"] == 0
+    screen(contract, direct_vm, actors[3], short)
+    assert bid_of(contract, actors[3], short)["status"] == "revealed"
+    assert bid_of(contract, actors[3], short)["attempts"] == 0
 
 
 # --------------------------------------------------------------- review griefing
