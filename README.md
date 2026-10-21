@@ -83,10 +83,10 @@ The Direct Mode suite covers normal lifecycles, every input-validation path, exa
 `scripts/live_e2e.py` drives one complete tender through the real network with real validators and a real LLM and writes a Markdown and JSON report to `reports/`. It runs well in a GitHub Codespace (the repository includes a dev container that installs the pinned tooling). See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the exact steps.
 
 ```bash
-python scripts/live_e2e.py --address 0xYourDeployedSieve --check-only   # fast tooling/fixture check
-python scripts/live_e2e.py --address 0xYourDeployedSieve                # full run, roughly 40 minutes
+python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1 --check-only   # fast tooling/fixture check
+python scripts/live_e2e.py --address 0xCDb477B28fA35CcBf96129270af88305c8d2C8e1                # full run, roughly 40 minutes
 ```
 
 ## Deployment status
 
-Sieve v0.1.0 is not yet recorded as deployed in this repository. After deploying, record the address, transaction, source hash and the report from the live run in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Sieve v0.1.0 is deployed on GenLayer Studionet at `0xCDb477B28fA35CcBf96129270af88305c8d2C8e1` ([explorer](https://explorer-studio.genlayer.com/address/0xCDb477B28fA35CcBf96129270af88305c8d2C8e1)). Source SHA-256 of `contracts/sieve.py`: `f7fad4c45626ed74dff33bc5256905acbdb1b5c9ec414b415dafe3371986a036`. The deployment record and the live-run report belong in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
