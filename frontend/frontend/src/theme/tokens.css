@@ -1,0 +1,132 @@
+/* ============================================================
+   Sieve design tokens — all colors come from CSS variables.
+   Components must NEVER use hardcoded hex values.
+   ============================================================ */
+
+:root,
+[data-theme="light"] {
+  --color-background: #ffffff;
+  --color-surface: #f8f9fa;
+  --color-surface-2: #f1f3f5;
+  --color-border: #dee2e6;
+  --color-text: #1a1a2e;
+  --color-text-muted: #59616a;
+  --color-accent: #6d28d9;
+  --color-accent-2: #8b5cf6;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-glow: rgba(109, 40, 217, 0.25);
+  --color-glow-strong: rgba(109, 40, 217, 0.5);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px var(--color-glow);
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* 3D scene parameters */
+  --scene-bg: #f5f5fc;
+  --scene-fog: #e8e8f8;
+  --scene-mesh: #6d28d9;
+  --scene-particle-won: #059669;
+  --scene-particle-fail: #dc2626;
+  --scene-particle-ambient: #8b5cf6;
+}
+
+[data-theme="dim"] {
+  --color-background: #1e2030;
+  --color-surface: #252840;
+  --color-surface-2: #2d3054;
+  --color-border: #3d4160;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-accent: #a78bfa;
+  --color-accent-2: #c4b5fd;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-glow: rgba(167, 139, 250, 0.35);
+  --color-glow-strong: rgba(167, 139, 250, 0.65);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-glow: 0 0 25px var(--color-glow);
+
+  /* 3D scene parameters */
+  --scene-bg: #151728;
+  --scene-fog: #1e2030;
+  --scene-mesh: #a78bfa;
+  --scene-particle-won: #34d399;
+  --scene-particle-fail: #f87171;
+  --scene-particle-ambient: #c4b5fd;
+}
+
+[data-theme="dark"] {
+  --color-background: #0a0a0f;
+  --color-surface: #111117;
+  --color-surface-2: #1a1a24;
+  --color-border: #2d2d3d;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-accent: #a78bfa;
+  --color-accent-2: #c4b5fd;
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-danger: #f87171;
+  --color-glow: rgba(167, 139, 250, 0.4);
+  --color-glow-strong: rgba(167, 139, 250, 0.75);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 30px var(--color-glow);
+
+  /* 3D scene parameters */
+  --scene-bg: #050508;
+  --scene-fog: #0a0a0f;
+  --scene-mesh: #c4b5fd;
+  --scene-particle-won: #4ade80;
+  --scene-particle-fail: #f87171;
+  --scene-particle-ambient: #a78bfa;
+}
+
+/* Global base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Smooth background and text color transitions on theme switch */
+body, header, nav, main, footer, .card, .btn {
+  transition: background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
