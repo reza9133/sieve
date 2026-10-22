@@ -90,8 +90,3 @@ python scripts/live_e2e.py --address 0x96e10D188e503d3a3Ac0002966480F4bd921e81a 
 ## Deployment status
 
 Sieve v0.1.0 is deployed on GenLayer Studionet at `0x96e10D188e503d3a3Ac0002966480F4bd921e81a` ([explorer](https://explorer-studio.genlayer.com/address/0x96e10D188e503d3a3Ac0002966480F4bd921e81a)). Source SHA-256 of `contracts/sieve.py`: `f7fad4c45626ed74dff33bc5256905acbdb1b5c9ec414b415dafe3371986a036`. The deployment record and the live-run report belong in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
-
-## Frontend
-
-The multi-page web frontend is located in `frontend/`. It provides sealed-bid preparation, EIP-6963 wallet discovery, document hashing, offline commitment verification, tender dashboards, and pull-payment credit management. See `frontend/NOTES.md` for running and development instructions.
-
