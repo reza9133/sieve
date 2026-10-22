@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" fill="none">
+  <defs>
+    <linearGradient id="sieve-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="var(--color-accent, #7c3aed)" />
+      <stop offset="100%" stop-color="var(--color-accent-2, #a855f7)" />
+    </linearGradient>
+  </defs>
+  <!-- Mark -->
+  <g transform="translate(0, 2)">
+    <circle cx="18" cy="18" r="16" stroke="url(#sieve-logo-grad)" stroke-width="2.5" />
+    <line x1="7" y1="18" x2="29" y2="18" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1.5 2" stroke-linecap="round" opacity="0.6" />
+    <circle cx="13" cy="11" r="2" fill="currentColor" opacity="0.5" />
+    <circle cx="18" cy="9" r="2.2" fill="url(#sieve-logo-grad)" />
+    <circle cx="23" cy="12" r="1.8" fill="currentColor" opacity="0.4" />
+    <circle cx="18" cy="18" r="2" fill="url(#sieve-logo-grad)" />
+    <circle cx="18" cy="25" r="2.6" fill="url(#sieve-logo-grad)" />
+  </g>
+  <!-- Wordmark -->
+  <text x="46" y="27" font-family="'Inter', system-ui, sans-serif" font-weight="700" font-size="22" letter-spacing="-0.5px" fill="currentColor">
+    Sieve
+  </text>
+</svg>
