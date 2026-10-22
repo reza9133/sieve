@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useWallet } from '@/wallet/WalletProvider'
 import { fetchAvailableCredit, executeOpenTender } from '@/chain/sieveClient'
 import { hashDocumentFile } from '@/lib/hash'
-import { parseGEN, formatGEN, toBigInt } from '@/lib/units'
+import { parseGEN, formatGEN } from '@/lib/units'
 import {
   validateTenderId,
   validateTitle,
@@ -98,7 +98,7 @@ export function TenderNew() {
   try {
     budgetWei = parseGEN(budgetGen)
     bondWei = parseGEN(bondGen)
-  } catch {}
+  } catch { /* ignore */ }
 
   const hasEnoughCredit = availableCredit >= budgetWei
 

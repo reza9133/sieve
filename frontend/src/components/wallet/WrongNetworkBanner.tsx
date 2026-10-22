@@ -1,4 +1,3 @@
-import React from 'react'
 import { useWallet } from '@/wallet/WalletProvider'
 import { STUDIONET_CHAIN_ID } from '@/chain/config'
 

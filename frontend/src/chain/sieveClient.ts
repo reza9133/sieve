@@ -8,7 +8,6 @@ import { toBigInt } from '@/lib/units'
 import {
   SIEVE_ADDRESS,
   RPC_URL,
-  STUDIONET_CHAIN_ID,
 } from './config'
 import type {
   TenderData,
@@ -57,7 +56,6 @@ async function callContractView(functionName: string, args: unknown[]): Promise<
     if (typeof genlayer.createClient === 'function') {
       const client = genlayer.createClient({
         endpoint: RPC_URL,
-        chainId: STUDIONET_CHAIN_ID,
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const res = await (client as any).readContract({
@@ -248,9 +246,7 @@ async function executeContractWrite(
     if (typeof genlayer.createClient === 'function') {
       const client = genlayer.createClient({
         endpoint: RPC_URL,
-        chainId: STUDIONET_CHAIN_ID,
-        provider,
-        account,
+        account: account as `0x${string}`,
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tx = await (client as any).writeContract({

@@ -1,4 +1,3 @@
-import React from 'react'
 
 export function SkeletonLine({ className = 'h-4 w-full' }: { className?: string }) {
   return <div className={`shimmer rounded bg-surface-2 ${className}`} />

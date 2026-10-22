@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   GITHUB_REPO_URL,
   AUTHOR_X_URL,

@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, Component, type ReactNode } from 'react'
+import { useRef, useMemo, Component, type ReactNode } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useTheme } from '@/theme/ThemeProvider'
@@ -63,6 +63,7 @@ function SieveMeshDisc({ accentColor }: SieveMeshProps) {
       {Array.from({ length: 12 }).map((_, i) => {
         const angle = (i * Math.PI) / 6
         return (
+          // @ts-expect-error R3F <line> is typed as SVG <line> in JSX
           <line key={i} rotation={[0, 0, angle]}>
             <bufferGeometry
               attach="geometry"

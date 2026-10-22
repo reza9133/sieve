@@ -1,4 +1,3 @@
-import React from 'react'
 import { GENLAYER_DOCS_URL } from '@/chain/config'
 
 export function Security() {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { HeroScene } from '@/scenes/HeroScene'
 import { fetchContractInfo, fetchAccounting } from '@/chain/sieveClient'

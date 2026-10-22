@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useWallet } from '@/wallet/WalletProvider'
 import {
@@ -13,7 +13,7 @@ import {
 } from '@/chain/sieveClient'
 import type { TenderData, BidData, RankingData } from '@/chain/types'
 import { formatGEN, shortenAddress } from '@/lib/units'
-import { deriveTenderPhase, formatDateTime, formatCountdown } from '@/lib/time'
+import { deriveTenderPhase, formatCountdown } from '@/lib/time'
 import { decodeFailedMask } from '@/lib/validation'
 import { CopyButton } from '@/components/ui/CopyButton'
 import { SkeletonCard } from '@/components/ui/LoadingSkeleton'
@@ -123,7 +123,7 @@ export function TenderDetail() {
         try {
           const b = await fetchBid(funder, tenderId, bAddress)
           bidList.push(b)
-        } catch {}
+        } catch { /* ignore */ }
       }
       setBids(bidList)
 
@@ -131,7 +131,7 @@ export function TenderDetail() {
       try {
         const rankingData = await fetchRanking(funder, tenderId)
         setRanking(rankingData)
-      } catch {}
+      } catch { /* ignore */ }
 
       setError(null)
     } catch (err: unknown) {
@@ -304,7 +304,7 @@ export function TenderDetail() {
         <div className="pt-4 border-t border-border space-y-2">
           <div className="flex justify-between items-center text-xs">
             <span className="font-semibold text-text">Phase: {phaseInfo.label}</span>
-            {phaseInfo.nextBoundarySec && (
+            {!!phaseInfo.nextBoundarySec && (
               <span className="font-mono text-accent">
                 Next deadline in: {formatCountdown(phaseInfo.nextBoundarySec)}
               </span>

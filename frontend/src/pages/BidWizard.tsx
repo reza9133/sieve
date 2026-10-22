@@ -14,7 +14,7 @@ import {
   generateSalt,
 } from '@/lib/commitment'
 import { hashDocumentFile } from '@/lib/hash'
-import { parseGEN, formatGEN } from '@/lib/units'
+import { parseGEN, formatGEN, shortenAddress } from '@/lib/units'
 import {
   validateHttpsUrl,
   validateHash,
@@ -27,7 +27,6 @@ import {
   type RevealPackage,
 } from '@/lib/storage'
 import { parseContractError } from '@/chain/errors'
-import { explorerTxUrl } from '@/chain/config'
 
 export function BidWizard() {
   const { funder: routeFunder, id: routeId } = useParams<{ funder: string; id: string }>()
@@ -175,7 +174,7 @@ export function BidWizard() {
     let priceWei = 0n
     try {
       priceWei = parseGEN(priceGen)
-    } catch {}
+    } catch { /* ignore */ }
 
     const pkg: RevealPackage = {
       version: 1,
@@ -242,7 +241,7 @@ export function BidWizard() {
   let priceWei = 0n
   try {
     priceWei = parseGEN(priceGen)
-  } catch {}
+  } catch { /* ignore */ }
 
   const hasEnoughBond = availableCredit >= tender.bondWei
   const isPriceValid = priceWei > 0n && priceWei <= tender.budgetWei
@@ -693,7 +692,7 @@ export function BidWizard() {
                   isSubmitting ||
                   isWrongNetwork ||
                   !phaseInfo.canReveal ||
-                  (existingBid && computedCommitment.toLowerCase() !== existingBid.commitment.toLowerCase())
+                  (!!existingBid && computedCommitment.toLowerCase() !== existingBid.commitment.toLowerCase())
                 }
                 onClick={handleRevealBid}
                 className="btn btn-primary px-8"

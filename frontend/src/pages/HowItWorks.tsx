@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { LifecycleScene, type LifecycleStage } from '@/scenes/LifecycleScene'
 
 export function HowItWorks() {

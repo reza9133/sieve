@@ -91,7 +91,7 @@ export async function computeCommitment(params: CommitmentParams): Promise<strin
  */
 export async function sha256Hex(data: string | Uint8Array): Promise<string> {
   const bytes = typeof data === 'string' ? encoder.encode(data) : data
-  const hashBuffer = await crypto.subtle.digest('SHA-256', bytes)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', new Uint8Array(bytes))
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return '0x' + hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }

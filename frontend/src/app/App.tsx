@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/components/layout/Layout'
 import { SkeletonCard } from '@/components/ui/LoadingSkeleton'

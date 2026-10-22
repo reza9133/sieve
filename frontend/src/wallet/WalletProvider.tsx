@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -81,7 +81,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setActiveProvider(null)
       try {
         localStorage.removeItem(LAST_WALLET_RDNS_KEY)
-      } catch {}
+      } catch { /* ignore */ }
     }
 
     provider.on('accountsChanged', handleAccountsChanged)
@@ -105,7 +105,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setConnectionError(null)
     try {
       localStorage.removeItem(LAST_WALLET_RDNS_KEY)
-    } catch {}
+    } catch { /* ignore */ }
   }, [])
 
   // Explicit connect
@@ -127,7 +127,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
         try {
           localStorage.setItem(LAST_WALLET_RDNS_KEY, detail.info.rdns)
-        } catch {}
+        } catch { /* ignore */ }
 
         setupEventListeners(detail.provider)
       } catch (err: unknown) {
@@ -161,7 +161,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setIsDemoModeState(enabled)
     try {
       localStorage.setItem(DEMO_MODE_KEY, String(enabled))
-    } catch {}
+    } catch { /* ignore */ }
   }, [])
 
   // Init EIP-6963 and attempt silent reconnect
@@ -175,7 +175,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         let savedRdns: string | null = null
         try {
           savedRdns = localStorage.getItem(LAST_WALLET_RDNS_KEY)
-        } catch {}
+        } catch { /* ignore */ }
 
         if (savedRdns) {
           const match = updated.find((p) => p.info.rdns === savedRdns)
