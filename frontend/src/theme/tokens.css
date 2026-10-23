@@ -1,0 +1,68 @@
+/* Colours are space-separated RGB triplets so Tailwind can apply alpha. Nothing else defines colour. */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: 243 246 249;
+  --surface: 255 255 255;
+  --surface-2: 232 237 243;
+  --border: 200 209 221;
+  --text: 20 27 45;
+  --text-muted: 80 92 115;
+  --accent: 0 124 118;
+  --accent-2: 91 63 214;
+  --success: 21 128 61;
+  --warning: 146 88 6;
+  --danger: 185 28 28;
+  --on-accent: 255 255 255;
+  --glow: 0 124 118;
+  --glow-strength: 0.22;
+  --shadow: 20 27 45;
+  --shadow-strength: 0.28;
+  /* 3D scene: 0 = plain blending (light surfaces), 1 = additive glow (dark surfaces) */
+  --scene-glow: 0;
+  --scene-metal: 0.35;
+}
+
+:root[data-theme='dim'] {
+  color-scheme: dark;
+  --bg: 52 63 82;
+  --surface: 63 76 99;
+  --surface-2: 74 88 113;
+  --border: 104 119 146;
+  --text: 238 242 247;
+  --text-muted: 207 216 229;
+  --accent: 94 234 212;
+  --accent-2: 190 172 255;
+  --success: 120 232 168;
+  --warning: 252 200 108;
+  --danger: 255 160 150;
+  --on-accent: 14 30 38;
+  --glow: 94 234 212;
+  --glow-strength: 0.35;
+  --shadow: 12 18 32;
+  --shadow-strength: 0.45;
+  --scene-glow: 0.6;
+  --scene-metal: 0.6;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: 8 11 22;
+  --surface: 15 20 36;
+  --surface-2: 24 31 54;
+  --border: 44 55 86;
+  --text: 232 237 248;
+  --text-muted: 148 160 188;
+  --accent: 94 234 212;
+  --accent-2: 167 139 250;
+  --success: 74 222 128;
+  --warning: 251 191 36;
+  --danger: 248 113 113;
+  --on-accent: 6 24 30;
+  --glow: 94 234 212;
+  --glow-strength: 0.5;
+  --shadow: 0 0 0;
+  --shadow-strength: 0.6;
+  --scene-glow: 1;
+  --scene-metal: 0.9;
+}
