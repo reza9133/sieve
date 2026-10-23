@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sieve: sealed-bid reverse auctions on GenLayer</title>
+    <meta
+      name="description"
+      content="Sieve is a sealed-bid reverse auction on GenLayer Studionet. Validators screen each bid against a committed requirements document, and deterministic code awards the lowest compliant price."
+    />
+    <meta name="theme-color" content="#080b16" />
+    <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sieve" />
+    <meta property="og:title" content="Sieve: sealed-bid reverse auctions on GenLayer" />
+    <meta
+      property="og:description"
+      content="Sealed bids, validator-screened compliance, and pull-payment settlement on GenLayer Studionet."
+    />
+    <meta property="og:image" content="/brand/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Sieve: sealed-bid reverse auctions on GenLayer" />
+    <meta
+      name="twitter:description"
+      content="Sealed bids, validator-screened compliance, and pull-payment settlement on GenLayer Studionet."
+    />
+    <meta name="twitter:image" content="/brand/og.png" />
+    <meta name="twitter:creator" content="@amirhp771" />
+    <script>
+      // Runs before React mounts so the first paint already has the right theme (no flash).
+      (function () {
+        try {
+          var saved = localStorage.getItem('sieve:v1:theme');
+          var theme =
+            saved === 'light' || saved === 'dim' || saved === 'dark'
+              ? saved
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          /* storage blocked: the stylesheet default (light) applies */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Sieve needs JavaScript to talk to your wallet and to the GenLayer network.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
