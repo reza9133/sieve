@@ -21,6 +21,23 @@ const parseChainId = (value: unknown): number | null => {
   return null;
 };
 
+/**
+ * Ask the wallet to show its account picker. `eth_requestAccounts` alone silently returns the account
+ * the site was already granted, so after a "disconnect" the user would be re-attached to the same
+ * account without a choice. `wallet_requestPermissions` always opens the wallet's own selection UI.
+ * Wallets that do not implement it fall back to `eth_requestAccounts`.
+ */
+async function requestAccounts(provider: DiscoveredWallet['provider']): Promise<unknown> {
+  try {
+    await provider.request({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] });
+  } catch (e) {
+    const code = walletErrorCode(e);
+    if (code === 4001 || code === -32002) throw e; // rejected, or a request is already pending
+    /* method unsupported: use the plain request below */
+  }
+  return provider.request({ method: 'eth_requestAccounts' });
+}
+
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [wallets, setWallets] = useState<DiscoveredWallet[]>([]);
   const [discoveryDone, setDiscoveryDone] = useState(false);
@@ -103,7 +120,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       setError(null);
       setStatus('connecting');
       try {
-        const accounts = await target.provider.request({ method: 'eth_requestAccounts' });
+        const accounts = await requestAccounts(target.provider);
         await finishConnect(target, accounts);
         setModalOpen(false);
       } catch (e) {
@@ -133,14 +150,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, [wallets, wallet, finishConnect]);
 
   const disconnect = useCallback(() => {
-    // EIP-1193 has no standard "disconnect"; the session is forgotten locally.
+    // EIP-1193 has no standard "disconnect". Forget the session locally, and ask the wallet to revoke
+    // this site's account permission (MetaMask and others support it) so the next connect is a fresh choice.
+    const previous = wallet;
     store.remove(LAST_WALLET_KEY);
     setWallet(null);
     setAccount(null);
     setChainId(null);
     setStatus('disconnected');
     setError(null);
-  }, []);
+    if (previous) {
+      void Promise.resolve(
+        previous.provider.request({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] }),
+      ).catch(() => {
+        /* unsupported by this wallet: connect() still forces the account picker */
+      });
+    }
+  }, [wallet]);
 
   const switchNetwork = useCallback(async () => {
     if (!wallet) return;
