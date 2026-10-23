@@ -38,6 +38,20 @@ The fixtures must be reachable over public HTTPS with byte-exact content; `.gita
 
 Reports are written to `reports/live-e2e-<timestamp>.md` and `.json`. Expected outcomes: `alpha` and `bravo` compliant, `charlie` noncompliant (third requirement), `delta` noncompliant with a reviewer-instruction attempt, `foxtrot` disqualified (`proposal:hash_mismatch`), `echo` never revealed (bond forfeited), `bravo` winning at its sealed price. Real LLM output is probabilistic: a `FAIL` on a semantic check is a finding to inspect, not automatically a contract bug.
 
+## 5. Host the frontend (Cloudflare)
+
+The app uses client-side routes, so the host must serve `index.html` for unknown paths.
+
+| Setting | Value |
+| --- | --- |
+| Root directory | `frontend` |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Environment variable | `NODE_VERSION=22` (or rely on `frontend/.nvmrc`) |
+| Optional | `VITE_SIEVE_ADDRESS`, `VITE_RPC_URL` (see `frontend/.env.example`) |
+
+On Cloudflare Pages, a project with no `404.html` already falls back to `index.html`. With Workers static assets, set `not_found_handling` to `single-page-application`. After the final domain is known, replace the relative social-image URLs in `frontend/index.html` with absolute ones.
+
 ## Known unverified assumptions
 
 - `sim_fundAccount` funding may not exist on your Studionet endpoint; fund the printed addresses manually if the runner says so.
