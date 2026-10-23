@@ -66,6 +66,6 @@ What was run: typecheck, lint, 100 unit/component tests, production build, and a
 - **No global tender list.** The contract has no enumeration method. Tenders are found by funder address and id; the Explore page also keeps a local, per-browser history and pins. An indexer would be the way to add a public list.
 - **No demo mode.** Without a reachable RPC, tender pages show an error state with retry.
 - **Reveal packages live in this browser's localStorage** (plus the backup file the user downloads). Clearing site data loses them, which is why the backup step is mandatory.
-- **Wallet disconnect** is local only; EIP-1193 has no standard disconnect.
+- **Wallet disconnect**: EIP-1193 has no standard disconnect. Sieve forgets the session locally and sends `wallet_revokePermissions` (best effort; wallets without it ignore it). Connecting always calls `wallet_requestPermissions` first so the wallet's own account picker opens, falling back to `eth_requestAccounts` where unsupported. Verified against mocks only, not with every real wallet.
 - **Bundle size.** three.js and genlayer-js are large; both are code-split and the 3D scene loads lazily, so non-3D pages stay small.
 - **Header on narrow screens** moves the theme switcher into the menu.
