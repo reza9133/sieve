@@ -91,6 +91,63 @@ describe('connect modal', () => {
     expect(b.request).toHaveBeenCalledWith({ method: 'eth_requestAccounts' });
     expect(a.request).not.toHaveBeenCalled();
   });
+
+  it('forces the wallet account picker and revokes the grant on disconnect, so a new account can be chosen', async () => {
+    const a = mockWallet('a', 'Alpha', CHAIN_ID_HEX);
+    removers.push(a.remove);
+    mount();
+    fireEvent.click(screen.getByText('open'));
+    fireEvent.click(await screen.findByRole('button', { name: /Alpha/ }));
+    await screen.findByText(/0x1111…1111|0x11/);
+    expect(a.request).toHaveBeenCalledWith({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] });
+
+    fireEvent.click(screen.getByRole('button', { name: /0x1111/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Disconnect' }));
+    expect(a.request).toHaveBeenCalledWith({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] });
+    expect(await screen.findByRole('button', { name: 'Connect wallet' })).toBeInTheDocument();
+  });
+
+  it('falls back to eth_requestAccounts when the wallet has no wallet_requestPermissions', async () => {
+    const request = vi.fn(async ({ method }: { method: string }) => {
+      if (method === 'wallet_requestPermissions') throw Object.assign(new Error('unsupported'), { code: -32601 });
+      if (method === 'eth_requestAccounts') return [ADDR];
+      if (method === 'eth_chainId') return CHAIN_ID_HEX;
+      return null;
+    });
+    const handler = () =>
+      window.dispatchEvent(
+        new CustomEvent('eip6963:announceProvider', {
+          detail: { info: { uuid: 'z', name: 'Zeta', icon: '', rdns: 'io.zeta' }, provider: { request } },
+        }),
+      );
+    window.addEventListener('eip6963:requestProvider', handler);
+    removers.push(() => window.removeEventListener('eip6963:requestProvider', handler));
+    mount();
+    fireEvent.click(screen.getByText('open'));
+    fireEvent.click(await screen.findByRole('button', { name: /Zeta/ }));
+    await screen.findByText(/0x1111…1111|0x11/);
+    expect(request).toHaveBeenCalledWith({ method: 'eth_requestAccounts' });
+  });
+
+  it('does not fall back when the user rejects the account picker', async () => {
+    const request = vi.fn(async ({ method }: { method: string }) => {
+      if (method === 'wallet_requestPermissions') throw Object.assign(new Error('rejected'), { code: 4001 });
+      return null;
+    });
+    const handler = () =>
+      window.dispatchEvent(
+        new CustomEvent('eip6963:announceProvider', {
+          detail: { info: { uuid: 'y', name: 'Yota', icon: '', rdns: 'io.yota' }, provider: { request } },
+        }),
+      );
+    window.addEventListener('eip6963:requestProvider', handler);
+    removers.push(() => window.removeEventListener('eip6963:requestProvider', handler));
+    mount();
+    fireEvent.click(screen.getByText('open'));
+    fireEvent.click(await screen.findByRole('button', { name: /Yota/ }));
+    await screen.findByText(/You rejected the request/);
+    expect(request).not.toHaveBeenCalledWith({ method: 'eth_requestAccounts' });
+  });
 });
 
 describe('wrong network guard', () => {
